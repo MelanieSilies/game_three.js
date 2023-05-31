@@ -7,21 +7,28 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 const renderer = new THREE.WebGLRenderer();
 const controls = new OrbitControls(camera, renderer.domElement);
+const clock = new THREE.Clock();
+let mixer;
 
 
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0x42f5f2 } );
+const geometry = new THREE.BoxGeometry( 100, 0.1, 100);
+const material = new THREE.MeshBasicMaterial( { color: 0x4e5236 } );
 const cube = new THREE.Mesh( geometry, material );
-//scene.add( cube );
+scene.add( cube );
 
 camera.position.z = 5;
 
 const gloader = new GLTFLoader();
 gloader.load('./models/buster_drone/scene.gltf', (drone) => {
+    mixer = new THREE.AnimationMixer(drone.scene);
+    drone.animations.forEach((clip) => {
+        mixer.clipAction(clip).play();
+    });
     scene.add(drone.scene);
+    drone.scene.position.set(0, 2, 0);
 });
 
 const light = new THREE.AmbientLight(0x83c5f7);
@@ -42,7 +49,9 @@ scene.background = texture;
 function animate() {
 	requestAnimationFrame( animate );
 	renderer.render( scene, camera );
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    let delta = clock.getDelta();
+    if(mixer){
+        mixer.update(delta);
+    }
 }
 animate();
